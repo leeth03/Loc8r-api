@@ -12,7 +12,7 @@ require('./app_api/config/passport');
 
 const usersRouter = require('./app_server/routes/users');
 const apiRouter = require('./app_api/routes/index');
-var app = express();
+const app = express();
 
 const cors = require('cors');
 const corsOptions = {
@@ -36,13 +36,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'app_public', 'build/browser')));
+app.use(express.static(path.join(__dirname, 'app_public', 'build')));
 app.use(passport.initialize());
-app.use('/api', (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    next();
-});
+
 //app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api', apiRouter);
