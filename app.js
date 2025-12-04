@@ -4,11 +4,28 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const indexRouter = require('./app_server/routes/index');
+//const indexRouter = require('./app_server/routes/index');
+const passport = require('passport');
+require('./app_api/models/db');
+
+require('./app_api/config/passport');
+
 const usersRouter = require('./app_server/routes/users');
 const apiRouter = require('./app_api/routes/index');
-require('./app_api/models/db');
 var app = express();
+
+const cors = require('cors');
+const corsOptions = {
+    origin: '*',
+    optionsSuccessStatus: 200 // For legacy browser support
+};
+app.use(cors(corsOptions));
+
+app.use('/api', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-with, Content-type, Accept, Authorization');
+    next();
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'app_server', 'views'));
@@ -19,12 +36,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
+app.use(express.static(path.join(__dirname, 'app_public', 'build/browser')));
+app.use(passport.initialize());
+app.use('/api', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    next();
+});
+//app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api', apiRouter);
 
+app.get(/(\/about)|(\/location\/[a-z0-9]{24})/, function (req, res, next) {
+    res.sendFile(path.join(__dirname, 'app_public', 'build/browser', 'index.html'));
+});
 // catch 404 and forward to error handler
+
+app.use((err, req, res, next) => {
+    if (err.name === 'UnauthorizedError') {
+        res
+            .status(401)
+            .json({ "message": err.name + ":" + err.message });
+    }
+});
 app.use(function(req, res, next) {
   next(createError(404));
 });
